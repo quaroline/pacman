@@ -1,4 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
+    var createBoard =() => {
+        for (let i = 0; i < layout.length; i++) {
+            const square = document.createElement('div');
+
+            grid.appendChild(square);
+            squares.push(square);
+
+            if (layout[i] === 1) {
+                squares[i].classList.add('wall');
+            }
+        }
+    }
+
+    var getCoordinates = (index) => [index % width, Math.floor(index/width)];
+
+    var moveBlinky = () => {
+        const directions = [-1, +1, +width, -width];
+
+        let direction = directions[Math.floor(Math.random() * directions.length)];
+
+        let ghostTimerId = NaN;
+
+        ghostTimerId = setInterval(() => {
+            if (!squares[blinkyIndex + direction].classList.contains('wall')) {
+                squares[blinkyIndex].classList.remove('blinky');
+
+                blinkyIndex += direction;
+
+                squares[blinkyIndex].classList.add('blinky');
+            } else
+                direction = directions[Math.floor(Math.random() * directions.length)];
+        }, 200);
+    }
+
     const width = 28;
 
     const grid = document.querySelector('.grid');
@@ -36,18 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const squares = [];
 
-    function createBoard() {
-        for (let i = 0; i < layout.length; i++) {
-            const square = document.createElement('div');
-
-            grid.appendChild(square);
-            squares.push(square);
-
-            if (layout[i] === 1) {
-                squares[i].classList.add('wall');
-            }
-        }
-    }
-
     createBoard();
+
+    let pacmanIndex = 502;
+    let blinkyIndex = 197;
+
+    squares[pacmanIndex].classList.add('pac-man');
+    squares[blinkyIndex].classList.add('blinky');
+
+    moveBlinky();
 });
