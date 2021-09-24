@@ -25,11 +25,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!squares[blinkyIndex + direction].classList.contains('wall')) {
                 squares[blinkyIndex].classList.remove('blinky');
 
-                blinkyIndex += direction;
+                const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
+                const [blinkyX, blinkyY] = getCoordinates(blinkyIndex);
 
-                squares[blinkyIndex].classList.add('blinky');
+                const [newBlinkyX, newBlinkyY] = getCoordinates(blinkyIndex + direction);
+
+                var isXCloser = () => ((newBlinkyX - pacmanX) > (blinkyX - pacmanX));
+                var isYCloser = () => ((newBlinkyY - pacmanY) > (blinkyY - pacmanY));
+
+                var addBlinkyClass = () => squares[blinkyIndex].classList.add('blinky');
+
+                if (isXCloser() || isYCloser()) {
+                    blinkyIndex += direction;
+
+                    addBlinkyClass();
+                }
+                else {
+                    addBlinkyClass();
+
+                    direction = directions[Math.floor(Math.random() * directions.length)];
+                }
+
+                addBlinkyClass();
             } else
                 direction = directions[Math.floor(Math.random() * directions.length)];
+
+            if (squares[blinkyIndex].classList.contains('pac-man')) 
+                clearInterval(ghostTimerId);
         }, 200);
     }
 
