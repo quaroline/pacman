@@ -1,14 +1,74 @@
+@import url(https://fonts.googleapis.com/css?family=Press+Start+2P);
+
+h2 {
+    text-align: center;
+}
+
+body {
+    background-image: url('assets/background.jpg');
+    background-repeat: repeat;
+
+    font-family: "Press start 2P";
+    color: yellow;
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
 .grid {
-    width: 560px;
-    height: 560px;
+    width: 35rem;
+    height: 35rem;
     border: solid black;
     display: flex;
     flex-wrap: wrap;
+    background-color: white;
+    animation: textColor 10s ease infinite;
+}
+
+.grid:after {
+    position: absolute;
+    content: "";
+    
+    top: 5vw;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
+
+    transform: scale(0.75);
+
+    -webkit-filter: blur(5vw);
+    -moz-filter: blur(5vw);
+    -ms-filter: blur(5vw);
+
+    filter: blur(5vw);
+
+    background: linear-gradient(270deg, #efff0f, #a70fff);
+    background-size: 200% 200%;
+
+    animation: animateGlow 10s ease infinite;
+}
+
+@keyframes animateGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes textColor {
+    0% { color: #a70fff; }
+    50% { color: #efff0f; }
+    100% { color: #a70fff; }
 }
 
 .grid div {
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 .wall {
@@ -17,7 +77,7 @@
 
 .pac-man {
     background-color: yellow;
-    border-radius: 10px;
+    border-radius: 0.625rem;
 }
 
 .blinky {

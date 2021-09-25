@@ -1,14 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-    var createBoard =() => {
+    var createBoard = () => {
         for (let i = 0; i < layout.length; i++) {
             const square = document.createElement('div');
 
             grid.appendChild(square);
             squares.push(square);
 
-            if (layout[i] === 1) {
+            if (layout[i] === 1)
                 squares[i].classList.add('wall');
-            }
         }
     }
 
