@@ -2,26 +2,28 @@ document.addEventListener('DOMContentLoaded', () => {
     var createBoard = () => {
         for (let i = 0; i < layout.length; i++) {
             const square = document.createElement('div');
-
+    
             grid.appendChild(square);
             squares.push(square);
-
+    
             if (layout[i] === 1)
                 squares[i].classList.add('wall');
         }
     }
+    
+    var getCoordinates = (index) => [index % width, Math.floor(index / width)];
 
-    var getCoordinates = (index) => [index % width, Math.floor(index/width)];
+    var getDirection = () => directions[Math.floor(Math.random() * directions.length)];
+    
+    var checkIfExistsObstacle = (index, direction) => squares[index + direction].classList.contains('wall');
 
     var moveBlinky = () => {
-        const directions = [-1, +1, +width, -width];
-
-        let direction = directions[Math.floor(Math.random() * directions.length)];
+        let direction = getDirection();
 
         let ghostTimerId = NaN;
 
         ghostTimerId = setInterval(() => {
-            if (!squares[blinkyIndex + direction].classList.contains('wall')) {
+            if (!checkIfExistsObstacle(blinkyIndex, direction)) {
                 squares[blinkyIndex].classList.remove('blinky');
 
                 const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
@@ -42,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 else {
                     addBlinkyClass();
 
-                    direction = directions[Math.floor(Math.random() * directions.length)];
+                    direction = getDirection();
                 }
 
                 addBlinkyClass();
             } else
-                direction = directions[Math.floor(Math.random() * directions.length)];
+                direction = getDirection();
 
             if (squares[blinkyIndex].classList.contains('pac-man')) 
                 clearInterval(ghostTimerId);
@@ -57,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const width = 28;
 
     const grid = document.querySelector('.grid');
+
+    const directions = [-1, +1, +width, -width];
 
     const layout = [
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -95,6 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pacmanIndex = 502;
     let blinkyIndex = 197;
+
+    let pacmanCoordinates = getCoordinates(pacmanIndex);
+
+    const pacman = {
+        x: pacmanCoordinates[0],
+        y: pacmanCoordinates[1]
+    };
 
     squares[pacmanIndex].classList.add('pac-man');
     squares[blinkyIndex].classList.add('blinky');
