@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var getDirection = () => directions[Math.floor(Math.random() * directions.length)];
     
-    var checkIfExistsObstacle = (index, direction) => squares[index + direction].classList.contains('wall');
+    var checkIfObstacleExists = (index, direction) => squares[index + direction].classList.contains('wall');
 
     var moveBlinky = () => {
         let direction = getDirection();
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let ghostTimerId = NaN;
 
         ghostTimerId = setInterval(() => {
-            if (!checkIfExistsObstacle(blinkyIndex, direction)) {
+            if (!checkIfObstacleExists(blinkyIndex, direction)) {
                 squares[blinkyIndex].classList.remove('blinky');
 
                 const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
@@ -54,6 +54,39 @@ document.addEventListener('DOMContentLoaded', () => {
             if (squares[blinkyIndex].classList.contains('pac-man')) 
                 clearInterval(ghostTimerId);
         }, 200);
+    }
+
+    var movePacman = (pressedKey) => {
+        const acceptedMoves = {
+            ArrowUp() {
+                if (pacman.y - 1 >= 0) 
+                    pacman.y -= 1;
+            },
+            ArrowRight() {
+                if (pacman.x + 1 < screen.width) 
+                    pacman.x += 1;
+            },
+            ArrowDown() { 
+                if (pacman.y + 1 < screen.width) 
+                    pacman.y += 1; 
+            }, 
+            ArrowLeft() { 
+                if (pacman.x - 1 >= 0) 
+                    pacman.x -= 1; 
+            }
+        }
+
+        const moveFunction = acceptedMoves[pressedKey];
+
+        //let isThereAnObstacle = checkIfObstacleExists(pacmanIndex, getDirection());
+
+        if (!isThereAnObstacle && moveFunction) {
+            let pacmanActualCoordinates = pacman;
+
+            moveFunction();
+
+            let pacmanNextCoordinates = pacman;
+        }
     }
 
     const width = 28;
@@ -109,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     squares[pacmanIndex].classList.add('pac-man');
     squares[blinkyIndex].classList.add('blinky');
+
+    document.addEventListener('keydown', (event) => movePacman(event.key));
 
     moveBlinky();
 });
