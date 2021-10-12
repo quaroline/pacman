@@ -13,6 +13,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 squares[i].classList.add('wall');
         }
     }
+
+    var startGame = () => {
+        document.querySelector('.menu').remove();
+
+        grid.classList.remove('hidden');
+
+        createBoard();
+
+        squares[pacmanIndex].classList.add('pac-man');
+        squares[redBlinkyIndex].classList.add('red-blinky');
+    
+        startSound.play();
+    
+        setTimeout(() => {
+            movePacman('ArrowLeft');
+    
+            createMoveBlinkyTimer();
+        }, 4000);
+    
+        document.addEventListener('keydown', (event) => movePacman(event.key));
+    }
     
     var getCoordinates = (index) => [index % width, Math.floor(index / width)];
 
@@ -38,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
             moveBlinky(directions[3]);
 
             if (squares[redBlinkyIndex].classList.contains('pac-man')) {
+                squares[redBlinkyIndex].classList.remove('pac-man')
+
                 clearInterval(pacmanTimer);
 
                 wakaSound.pause();
@@ -87,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const wakaSound = new Audio('assets/waka.mp3');
+    const startSound = new Audio('assets/start.mp3');
+
+    wakaSound.volume = 0.2;
+    startSound.volume = 0.2;
 
     const width = 28;
 
@@ -127,19 +154,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const squares = [];
 
-    createBoard();
-
     let pacmanIndex = 489;
     let redBlinkyIndex = 377;
 
     let pacmanTimer = NaN;
 
-    squares[pacmanIndex].classList.add('pac-man');
-    squares[redBlinkyIndex].classList.add('red-blinky');
+    let btnStart = document.getElementById("start");
 
-    wakaSound.volume = 0.2;
+    btnStart.onclick = startGame;
 
-    document.addEventListener('keydown', (event) => movePacman(event.key));
-
-    createMoveBlinkyTimer();
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') 
+            startGame();
+    });
 });

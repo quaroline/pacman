@@ -8,7 +8,6 @@ body {
     background-image: url('assets/background.jpg');
     background-repeat: repeat;
 
-    font-family: "Press start 2P";
     color: yellow;
 
     position: absolute;
@@ -18,7 +17,22 @@ body {
     transform: translate(-50%, -50%);
 }
 
-.grid {
+.responsive {
+    width: 80%;
+    height: 40%;
+}
+
+.center {
+    text-align: center;
+    margin: 0 auto;
+}
+
+.top-50 {
+    padding: 10rem 0;
+    text-align: center;
+}
+
+.grid, .menu {
     width: 35rem;
     height: 35rem;
     border: solid black;
@@ -26,7 +40,32 @@ body {
     flex-wrap: wrap;
     background-color: black;
     animation: textColor 10s ease infinite;
-    border: 2rem solid black 
+    border: 2rem solid black;
+}
+
+.btn-start-game {
+    font-family: "Press start 2P";
+    font-size: 2rem!important;
+
+    height: fit-content;
+    background-color: #fcc73f;
+    border: 5px solid #231f20;
+    border-radius: 10px;
+    box-shadow: 5px 5px #ee2a29;
+    color: #231f20;
+    cursor: pointer;
+    font-size: 48px;
+    outline: none;
+    padding: 16px;
+}
+
+.btn-start-game:active {
+    box-shadow: none;
+    transform: translateX(5px) translateY(5px);
+}
+
+.hidden {
+    display: none!important;
 }
 
 .grid:after {
