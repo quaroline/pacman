@@ -58,34 +58,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var movePacman = (pressedKey) => {
         const acceptedMoves = {
-            ArrowUp() {
-                if (pacman.y - 1 >= 0) 
-                    pacman.y -= 1;
-            },
-            ArrowRight() {
-                if (pacman.x + 1 < screen.width) 
-                    pacman.x += 1;
-            },
-            ArrowDown() { 
-                if (pacman.y + 1 < screen.width) 
-                    pacman.y += 1; 
-            }, 
-            ArrowLeft() { 
-                if (pacman.x - 1 >= 0) 
-                    pacman.x -= 1; 
-            }
+            ArrowLeft: () => directions[0],
+            ArrowRight: () => directions[1],
+            ArrowDown: () => directions[2], 
+            ArrowUp: () => directions[3]
         }
 
         const moveFunction = acceptedMoves[pressedKey];
 
-        //let isThereAnObstacle = checkIfObstacleExists(pacmanIndex, getDirection());
+        if (moveFunction) {
+            let direction = moveFunction();
 
-        if (!isThereAnObstacle && moveFunction) {
-            let pacmanActualCoordinates = pacman;
+            if (!checkIfObstacleExists(pacmanIndex, direction)) {
+                squares[pacmanIndex].classList.remove('pac-man');
 
-            moveFunction();
+                pacmanIndex += direction;
 
-            let pacmanNextCoordinates = pacman;
+                squares[pacmanIndex].classList.add('pac-man');                
+            }
         }
     }
 
@@ -132,13 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pacmanIndex = 502;
     let blinkyIndex = 197;
-
-    let pacmanCoordinates = getCoordinates(pacmanIndex);
-
-    const pacman = {
-        x: pacmanCoordinates[0],
-        y: pacmanCoordinates[1]
-    };
 
     squares[pacmanIndex].classList.add('pac-man');
     squares[blinkyIndex].classList.add('blinky');
