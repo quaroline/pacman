@@ -2,8 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     var createBoard = () => {
         for (let i = 0; i < layout.length; i++) {
             const square = document.createElement('div');
+
+            square.setAttribute("id", i);
     
             grid.appendChild(square);
+
             squares.push(square);
     
             if (layout[i] === 1)
@@ -13,46 +16,39 @@ document.addEventListener('DOMContentLoaded', () => {
     
     var getCoordinates = (index) => [index % width, Math.floor(index / width)];
 
-    var getDirection = () => directions[Math.floor(Math.random() * directions.length)];
+    var getRandomDirection = () => directions[Math.floor(Math.random() * directions.length)];
     
     var checkIfObstacleExists = (index, direction) => squares[index + direction].classList.contains('wall');
 
-    var moveBlinky = () => {
-        let direction = getDirection();
+    var moveBlinky = (direction) => {
+        if (!checkIfObstacleExists(redBlinkyIndex, direction)) {
+            squares[redBlinkyIndex].classList.remove('red-blinky');
 
+            redBlinkyIndex += direction;
+
+            squares[redBlinkyIndex].classList.add('red-blinky');
+        }
+    }
+
+    var createMoveBlinkyTimer = () => {
         let blinkyTimer = NaN;
 
         blinkyTimer = setInterval(() => {
-            if (!checkIfObstacleExists(blinkyIndex, direction)) {
-                squares[blinkyIndex].classList.remove('blinky');
+            //265 é o pixel acima do início do jogo
+            moveBlinky(directions[3]);
 
-                const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
-                const [blinkyX, blinkyY] = getCoordinates(blinkyIndex);
+            if (squares[redBlinkyIndex].classList.contains('pac-man')) {
+                clearInterval(pacmanTimer);
 
-                const [newBlinkyX, newBlinkyY] = getCoordinates(blinkyIndex + direction);
+                wakaSound.pause();
 
-                var isXCloser = () => ((newBlinkyX - pacmanX) > (blinkyX - pacmanX));
-                var isYCloser = () => ((newBlinkyY - pacmanY) > (blinkyY - pacmanY));
+                const deathSound = new Audio('assets/death.mp3');
 
-                var addBlinkyClass = () => squares[blinkyIndex].classList.add('blinky');
+                deathSound.volume = 0.2;
+                deathSound.play();
 
-                if (isXCloser() || isYCloser()) {
-                    blinkyIndex += direction;
-
-                    addBlinkyClass();
-                }
-                else {
-                    addBlinkyClass();
-
-                    direction = getDirection();
-                }
-
-                addBlinkyClass();
-            } else
-                direction = getDirection();
-
-            if (squares[blinkyIndex].classList.contains('pac-man')) 
                 clearInterval(blinkyTimer);
+            }
         }, 200);
     }
 
@@ -74,16 +70,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pacmanTimer = setInterval(() => {
                 if (!checkIfObstacleExists(pacmanIndex, direction)) {
+                    wakaSound.play();
+
                     squares[pacmanIndex].classList.remove('pac-man');
 
                     pacmanIndex += direction;
 
                     squares[pacmanIndex].classList.add('pac-man');
-                } else 
+                } else {
                     clearInterval(pacmanTimer);
-            }, 200);
+
+                    wakaSound.pause();
+                }
+            }, 180);
         }
     }
+
+    const wakaSound = new Audio('assets/waka.mp3');
 
     const width = 28;
 
@@ -127,14 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
     createBoard();
 
     let pacmanIndex = 489;
-    let blinkyIndex = 377;
+    let redBlinkyIndex = 377;
 
     let pacmanTimer = NaN;
 
     squares[pacmanIndex].classList.add('pac-man');
-    squares[blinkyIndex].classList.add('blinky');
+    squares[redBlinkyIndex].classList.add('red-blinky');
+
+    wakaSound.volume = 0.2;
 
     document.addEventListener('keydown', (event) => movePacman(event.key));
 
-    moveBlinky();
+    createMoveBlinkyTimer();
 });
