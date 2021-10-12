@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     var movePacman = (pressedKey) => {
+        if (pacmanTimer !== NaN)
+            clearInterval(pacmanTimer)
+
         const acceptedMoves = {
             ArrowLeft: () => directions[0],
             ArrowRight: () => directions[1],
@@ -68,8 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (moveFunction) {
             let direction = moveFunction();
-
-            let pacmanTimer = NaN;
 
             pacmanTimer = setInterval(() => {
                 if (!checkIfObstacleExists(pacmanIndex, direction)) {
@@ -127,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pacmanIndex = 489;
     let blinkyIndex = 377;
+
+    let pacmanTimer = NaN;
 
     squares[pacmanIndex].classList.add('pac-man');
     squares[blinkyIndex].classList.add('blinky');
