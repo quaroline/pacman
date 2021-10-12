@@ -24,15 +24,16 @@ body {
     border: solid black;
     display: flex;
     flex-wrap: wrap;
-    background-color: white;
+    background-color: black;
     animation: textColor 10s ease infinite;
+    border: 2rem solid black 
 }
 
 .grid:after {
     position: absolute;
     content: "";
     
-    top: 5vw;
+    top: 2vw;
     left: 0;
     right: 0;
     z-index: -1;
@@ -40,7 +41,7 @@ body {
     width: 100%;
     margin: 0 auto;
 
-    transform: scale(0.75);
+    transform: scale(0.9);
 
     -webkit-filter: blur(5vw);
     -moz-filter: blur(5vw);
@@ -48,7 +49,7 @@ body {
 
     filter: blur(5vw);
 
-    background: linear-gradient(270deg, #efff0f, #a70fff);
+    background: linear-gradient(270deg, #a70fff, #04d9ff);
     background-size: 200% 200%;
 
     animation: animateGlow 10s ease infinite;
@@ -62,8 +63,8 @@ body {
 
 @keyframes textColor {
     0% { color: #a70fff; }
-    50% { color: #efff0f; }
-    100% { color: #a70fff; }
+    50% { color: #04d9ff; }
+    100% { color: #423bfe; }
 }
 
 .grid div {
@@ -72,7 +73,7 @@ body {
 }
 
 .wall {
-    background-color: blue;
+    background-color: #423bfe;
 }
 
 .pac-man {
@@ -80,6 +81,8 @@ body {
     border-radius: 0.625rem;
 }
 
-.blinky {
+.red-blinky {
+    border-top-left-radius: 0.625rem;
+    border-top-right-radius: 0.625rem;
     background-color: red;
 }
