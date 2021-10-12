@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     var moveBlinky = () => {
         let direction = getDirection();
 
-        let ghostTimerId = NaN;
+        let blinkyTimer = NaN;
 
-        ghostTimerId = setInterval(() => {
+        blinkyTimer = setInterval(() => {
             if (!checkIfObstacleExists(blinkyIndex, direction)) {
                 squares[blinkyIndex].classList.remove('blinky');
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 direction = getDirection();
 
             if (squares[blinkyIndex].classList.contains('pac-man')) 
-                clearInterval(ghostTimerId);
+                clearInterval(blinkyTimer);
         }, 200);
     }
 
@@ -69,13 +69,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (moveFunction) {
             let direction = moveFunction();
 
-            if (!checkIfObstacleExists(pacmanIndex, direction)) {
-                squares[pacmanIndex].classList.remove('pac-man');
+            let pacmanTimer = NaN;
 
-                pacmanIndex += direction;
+            pacmanTimer = setInterval(() => {
+                if (!checkIfObstacleExists(pacmanIndex, direction)) {
+                    squares[pacmanIndex].classList.remove('pac-man');
 
-                squares[pacmanIndex].classList.add('pac-man');                
-            }
+                    pacmanIndex += direction;
+
+                    squares[pacmanIndex].classList.add('pac-man');
+                } else 
+                    clearInterval(pacmanTimer);
+            }, 200);
         }
     }
 
@@ -120,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createBoard();
 
-    let pacmanIndex = 502;
-    let blinkyIndex = 197;
+    let pacmanIndex = 489;
+    let blinkyIndex = 377;
 
     squares[pacmanIndex].classList.add('pac-man');
     squares[blinkyIndex].classList.add('blinky');
