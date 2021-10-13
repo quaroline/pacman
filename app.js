@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(pinkyTimer);  
     }
 
-    var checkIfGameIsOver = () => squares[blinkyIndex].classList.contains('pac-man');
+    var checkIfGameIsOver = () => squares[blinkyIndex].classList.contains('pac-man') || squares[pinkyIndex].classList.contains('pac-man');
 
     var createMoveBlinkyTimer = () => {
         pinkyTimer = setInterval(() => {
