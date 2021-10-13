@@ -55,22 +55,37 @@ document.addEventListener('DOMContentLoaded', () => {
     var removeClass = (index, className) => squares[index].classList.remove(className);
 
     var moveBlinky = (direction) => {
+        let className = 'red-blinky';
+
         if (blinkyMoveQuantity < 3) {
             direction = directions[3];
 
             blinkyMoveQuantity++;
-        } else {
+        } 
+        else if (redBlinkyIndex === 321) direction = -1;
+        else if (redBlinkyIndex === 322) direction = 1;
+        else {
             // Avoids Blinky enter the initial square again.
             squares[321].classList.add('exit-door');
             squares[322].classList.add('exit-door');
 
+            // In case Blinky goes to the edges.
+            if (redBlinkyIndex == 364) {
+                removeClass(redBlinkyIndex, className);
+
+                redBlinkyIndex = 391;
+            }
+            else if (redBlinkyIndex == 391) {
+                removeClass(redBlinkyIndex, className);
+
+                redBlinkyIndex = 364;
+            }
             // Avoids Blinky lock itself on "come and go" movement.
-            if (lastDirection && lastDirection == (-1 * direction) &&
+            else if (lastDirection && lastDirection == (-1 * direction) &&
+                !checkIfObstacleExists(redBlinkyIndex, lastDirection, 'exit-door') &&
                 !checkIfObstacleExists(redBlinkyIndex, lastDirection, 'wall'))
             direction = lastDirection;
         }
-
-        let className = 'red-blinky';
 
         removeClass(redBlinkyIndex, className);
 
@@ -78,13 +93,16 @@ document.addEventListener('DOMContentLoaded', () => {
         redBlinkyIndex += direction;
 
         addClass(redBlinkyIndex, className);
+
+        if (checkIfGameIsOver())
+            endGame();
     }
 
     var isCoordinateCloser = (next, actual, pacmans) => ((next - pacmans) > (actual - pacmans));
 
-    var endGame = (blinkyTimer) => {
+    var endGame = () => {
         squares[redBlinkyIndex].classList.remove('pac-man');
-        
+
         document.removeEventListener('keydown', handleArrows);
 
         clearInterval(pacmanTimer);
@@ -100,8 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var checkIfGameIsOver = () => squares[redBlinkyIndex].classList.contains('pac-man');
 
     var createMoveBlinkyTimer = () => {
-        let blinkyTimer = NaN;
-
         blinkyTimer = setInterval(() => {
             let direction = getRandomDirection(redBlinkyIndex);
 
@@ -124,10 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!alreadyMoved) {
                 moveBlinky(direction);
-            }
-
-            if (checkIfGameIsOver()) {
-                endGame(blinkyTimer);
             }
         }, 200);
     }
@@ -161,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     addClass(pacmanIndex, className);
                 } 
                 else if (checkIfGameIsOver()) {
-                    endGame(blinkyTimer);
+                    endGame();
                 } 
                 else {
                     clearInterval(pacmanTimer);
@@ -226,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let redBlinkyIndex = 377;
 
     let pacmanTimer = NaN;
+    let blinkyTimer = NaN;
 
     let btnStart = document.getElementById("humanAgentStart");
 
