@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             movePacman('ArrowLeft');
     
             createMoveBlinkyTimer();
-        }, 4000);
+        }, 1000);
     
         document.addEventListener('keydown', (event) => movePacman(event.key));
     }
@@ -41,22 +41,49 @@ document.addEventListener('DOMContentLoaded', () => {
     
     var checkIfObstacleExists = (index, direction) => squares[index + direction].classList.contains('wall');
 
+    var addBlinkyClass = () => squares[redBlinkyIndex].classList.add('red-blinky');
+
+    var removeBlinkyClass = () => squares[redBlinkyIndex].classList.remove('red-blinky');
+
     var moveBlinky = (direction) => {
-        if (!checkIfObstacleExists(redBlinkyIndex, direction)) {
-            squares[redBlinkyIndex].classList.remove('red-blinky');
+        if (blinkyMoveQuantity < 3) {
+            direction = directions[3];
 
-            redBlinkyIndex += direction;
-
-            squares[redBlinkyIndex].classList.add('red-blinky');
+            blinkyMoveQuantity++;
         }
+
+        while (checkIfObstacleExists(redBlinkyIndex, direction)) {
+            direction = getRandomDirection();
+        }
+
+        removeBlinkyClass();
+
+        lastDirection = direction;
+        redBlinkyIndex += direction;
+
+        addBlinkyClass();
     }
 
     var createMoveBlinkyTimer = () => {
         let blinkyTimer = NaN;
 
         blinkyTimer = setInterval(() => {
-            //265 é o pixel acima do início do jogo
-            moveBlinky(directions[3]);
+            let direction = getRandomDirection();
+
+            while (redBlinkyIndex + direction === 321 || redBlinkyIndex + direction === 322) 
+                direction = getRandomDirection();
+
+            const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
+            const [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
+
+            const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + direction);
+
+            var isXCloser = () => ((newBlinkyX - pacmanX) > (blinkyX - pacmanX));
+            var isYCloser = () => ((newBlinkyY - pacmanY) > (blinkyY - pacmanY));
+
+            if (isXCloser() || isYCloser()) {
+                moveBlinky(direction);
+            }
 
             if (squares[redBlinkyIndex].classList.contains('pac-man')) {
                 squares[redBlinkyIndex].classList.remove('pac-man')
@@ -64,8 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(pacmanTimer);
 
                 wakaSound.pause();
-
-                const deathSound = new Audio('assets/death.mp3');
 
                 deathSound.volume = 0.2;
                 deathSound.play();
@@ -109,8 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    var lastDirection = NaN;
+
+    var blinkyMoveQuantity = 0;
+
     const wakaSound = new Audio('assets/waka.mp3');
     const startSound = new Audio('assets/start.mp3');
+    const deathSound = new Audio('assets/death.mp3');
 
     wakaSound.volume = 0.2;
     startSound.volume = 0.2;
@@ -159,12 +189,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pacmanTimer = NaN;
 
-    let btnStart = document.getElementById("start");
+    let btnStart = document.getElementById("humanAgentStart");
 
     btnStart.onclick = startGame;
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') 
+    document.addEventListener('keydown', handleEnter = (event) => {
+        if (event.key === 'Enter') {
             startGame();
+
+            // Corrigir bug aqui:
+            document.removeEventListener('keydown', handleEnter);
+        }
     });
 });
