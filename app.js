@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    var handleArrows = (event) => movePacman(event.key);
+
     var startGame = () => {
         document.querySelector('.menu').remove();
 
@@ -32,70 +34,100 @@ document.addEventListener('DOMContentLoaded', () => {
             createMoveBlinkyTimer();
         }, 1000);
     
-        document.addEventListener('keydown', (event) => movePacman(event.key));
+        document.addEventListener('keydown', handleArrows);
     }
     
     var getCoordinates = (index) => [index % width, Math.floor(index / width)];
 
-    var getRandomDirection = () => directions[Math.floor(Math.random() * directions.length)];
+    var getRandomDirection = (index) => {
+        let direction = directions[Math.floor(Math.random() * directions.length)];
+
+        while (checkIfObstacleExists(index, direction, 'wall') || checkIfObstacleExists(index, direction, 'exit-door')) 
+            direction = directions[Math.floor(Math.random() * directions.length)];
+
+        return direction;
+    };
     
-    var checkIfObstacleExists = (index, direction) => squares[index + direction].classList.contains('wall');
+    var checkIfObstacleExists = (index, direction, obstacle) => squares[index + direction].classList.contains(obstacle);
 
-    var addBlinkyClass = () => squares[redBlinkyIndex].classList.add('red-blinky');
+    var addClass = (index, className) => squares[index].classList.add(className);
 
-    var removeBlinkyClass = () => squares[redBlinkyIndex].classList.remove('red-blinky');
+    var removeClass = (index, className) => squares[index].classList.remove(className);
 
     var moveBlinky = (direction) => {
         if (blinkyMoveQuantity < 3) {
             direction = directions[3];
 
             blinkyMoveQuantity++;
+        } else {
+            // Avoids Blinky enter the initial square again.
+            squares[321].classList.add('exit-door');
+            squares[322].classList.add('exit-door');
+
+            // Avoids Blinky lock itself on "come and go" movement.
+            if (lastDirection && lastDirection == (-1 * direction) &&
+                !checkIfObstacleExists(redBlinkyIndex, lastDirection, 'wall'))
+            direction = lastDirection;
         }
 
-        while (checkIfObstacleExists(redBlinkyIndex, direction)) {
-            direction = getRandomDirection();
-        }
+        let className = 'red-blinky';
 
-        removeBlinkyClass();
+        removeClass(redBlinkyIndex, className);
 
         lastDirection = direction;
         redBlinkyIndex += direction;
 
-        addBlinkyClass();
+        addClass(redBlinkyIndex, className);
     }
+
+    var isCoordinateCloser = (next, actual, pacmans) => ((next - pacmans) > (actual - pacmans));
+
+    var endGame = (blinkyTimer) => {
+        document.removeEventListener('keydown', handleArrows);
+
+        squares[redBlinkyIndex].classList.remove('pac-man')
+
+        clearInterval(pacmanTimer);
+
+        wakaSound.pause();
+
+        deathSound.volume = 0.2;
+        deathSound.play();
+
+        clearInterval(blinkyTimer);    
+    }
+
+    var checkIfGameIsOver = () => squares[redBlinkyIndex].classList.contains('pac-man');
 
     var createMoveBlinkyTimer = () => {
         let blinkyTimer = NaN;
 
         blinkyTimer = setInterval(() => {
-            let direction = getRandomDirection();
-
-            while (redBlinkyIndex + direction === 321 || redBlinkyIndex + direction === 322) 
-                direction = getRandomDirection();
+            let direction = getRandomDirection(redBlinkyIndex);
 
             const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
             const [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
 
-            const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + direction);
+            let alreadyMoved = false;
 
-            var isXCloser = () => ((newBlinkyX - pacmanX) > (blinkyX - pacmanX));
-            var isYCloser = () => ((newBlinkyY - pacmanY) > (blinkyY - pacmanY));
+            directions.every((dir) => {
+                const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + dir);
 
-            if (isXCloser() || isYCloser()) {
+                if (isCoordinateCloser(newBlinkyX, blinkyX, pacmanX) || isCoordinateCloser(newBlinkyY, blinkyY, pacmanY)) {
+                    moveBlinky(dir);
+
+                    alreadyMoved = true;
+
+                    return false;
+                }
+            });
+
+            if (!alreadyMoved) {
                 moveBlinky(direction);
             }
 
-            if (squares[redBlinkyIndex].classList.contains('pac-man')) {
-                squares[redBlinkyIndex].classList.remove('pac-man')
-
-                clearInterval(pacmanTimer);
-
-                wakaSound.pause();
-
-                deathSound.volume = 0.2;
-                deathSound.play();
-
-                clearInterval(blinkyTimer);
+            if (checkIfGameIsOver()) {
+                endGame(blinkyTimer);
             }
         }, 200);
     }
@@ -109,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ArrowRight: () => directions[1],
             ArrowDown: () => directions[2], 
             ArrowUp: () => directions[3]
-        }
+        };
 
         const moveFunction = acceptedMoves[pressedKey];
 
@@ -117,19 +149,25 @@ document.addEventListener('DOMContentLoaded', () => {
             let direction = moveFunction();
 
             pacmanTimer = setInterval(() => {
-                if (!checkIfObstacleExists(pacmanIndex, direction)) {
+                if (!checkIfObstacleExists(pacmanIndex, direction, 'wall')) {
                     wakaSound.play();
 
-                    squares[pacmanIndex].classList.remove('pac-man');
+                    let className = 'pac-man';
+
+                    removeClass(pacmanIndex, className);
 
                     pacmanIndex += direction;
 
-                    squares[pacmanIndex].classList.add('pac-man');
-                } else {
+                    addClass(pacmanIndex, className);
+                } 
+                else if (checkIfGameIsOver()) {
+                    endGame(blinkyTimer);
+                } 
+                else {
                     clearInterval(pacmanTimer);
 
                     wakaSound.pause();
-                }
+                }                
             }, 180);
         }
     }
@@ -193,12 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnStart.onclick = startGame;
 
-    document.addEventListener('keydown', handleEnter = (event) => {
+    let handleEnter = (event) => {
         if (event.key === 'Enter') {
             startGame();
 
-            // Corrigir bug aqui:
             document.removeEventListener('keydown', handleEnter);
         }
-    });
+    }
+
+    document.addEventListener('keydown', handleEnter);
 });
