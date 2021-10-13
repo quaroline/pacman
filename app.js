@@ -65,41 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return direction;
     };
 
-    function shuffle(ind, array) {
-        let arr = []
-        let index = ind % 4
-        for (let i = 0; i < 4; i++) {
-          arr.push(array[(index + i) % 4])
-        }
-        return arr
-      }
-
-    function getAdjacences(ind, queue, point) {
-        if (typeof point !== 'undefined') {
-          let adj = shuffle(ind, [{
-            x: point.x,
-            y: point.y - 1,
-            checked: false
-          }, {
-            x: point.x,
-            y: point.y + 1,
-            checked: false
-          }, {
-            x: point.x - 1,
-            y: point.y,
-            checked: false
-          }, {
-            x: point.x + 1,
-            y: point.y,
-            checked: false
-          }])
-          return adj.filter((value) =>
-            ((value.x >= 1 && value.x < width && value.y < width && value.y >= 1 && !isContained(map, value) && !isContained(queue, value))))
-        } else {
-          return []
-        }
-      }
-
     var routeSquare = function(i){
         var self = this;
 
@@ -344,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 blinkyMoveQuantity++;
         } 
         else {
+            if (className == 'pinky') debugger
             // Avoids Blinky enter the initial square again.
             squares[321].classList.add('exit-door');
             squares[322].classList.add('exit-door');
