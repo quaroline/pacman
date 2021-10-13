@@ -309,7 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 blinkyMoveQuantity++;
         } 
         else {
-            if (className == 'pinky') debugger
             // Avoids Blinky enter the initial square again.
             squares[321].classList.add('exit-door');
             squares[322].classList.add('exit-door');
@@ -333,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (lastDirection && lastDirection == (-1 * direction) &&
                 !checkIfObstacleExists(index, lastDirection, 'exit-door') &&
                 !checkIfObstacleExists(index, lastDirection, 'wall'))
-            direction = lastDirection;
+                direction = lastDirection;
         }
 
         removeClass(index, className);
