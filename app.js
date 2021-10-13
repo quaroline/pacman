@@ -11,15 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
             if (layout[i] === 1)
                 squares[i].classList.add('wall');
-            else {
-                let [x, y] = getCoordinates(i);
 
-                availablePositions.push({
-                    index: i,
-                    x: x,
-                    y: y
-                });
-            }
+            let [x, y] = getCoordinates(i);
+
+            map.push({
+                index: i,
+                x,
+                y,
+                available: layout[i] === 0
+            });
         }
     }
 
@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     
         document.addEventListener('keydown', handleArrows);
+
+        setInterval(() => {
+            const [x, y] = getCoordinates(pacmanIndex);
+
+            lastPacmanCoords = { x, y };
+        }, 2000);
     }
     
     var getCoordinates = (index) => [index % width, Math.floor(index / width)];
@@ -58,6 +64,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return direction;
     };
+
+    var getDistanceBetweenTwoCoords = (direction, pacmanCoords, blinkyCoords) => {
+        switch (direction) {
+            case -1: 
+                return Math.sqrt(Math.pow((blinkyCoords.x - (pacmanCoords.x - 4 * width)), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
+            case 1: 
+                return Math.sqrt(Math.pow((blinkyCoords.x - (pacmanCoords.x + 4 * width)), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
+            case 28:
+                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - (pacmanCoords.y + 4 * width), 2));
+            case -28:
+                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - (pacmanCoords.y - 4 * width), 2));
+            default:
+                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
+        }
+    }
+
+    var getDirectionAccordingToDistanceOfPacman = () => {
+        let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
+        let [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
+    
+        let pacmanCoords = { x: pacmanX, y: pacmanY };
+        let blinkyCoords = { x: blinkyX, y: blinkyY };
+
+        let getDistance = (i) => {
+            return (!checkIfObstacleExists(redBlinkyIndex, directions[i], 'exit-door') && 
+                !checkIfObstacleExists(redBlinkyIndex, directions[i], 'wall'))
+                ? getDistanceBetweenTwoCoords(directions[i], pacmanCoords, blinkyCoords) 
+                : Infinity;
+        }
+
+        let left = getDistance(0);
+        let right = getDistance(1);
+        let down = getDistance(2);
+        let up = getDistance(3);
+        
+        let minDistance = Math.min(Math.min(left, right), Math.min(up, down));
+
+        switch (minDistance) {
+            case left:
+                return directions[0];    
+            case right:
+                return directions[1];
+            case down:
+                return directions[2];
+            case up:
+                return directions[3];
+        }
+    }
     
     var checkIfObstacleExists = (index, direction, obstacle) => squares[index + direction].classList.contains(obstacle);
 
@@ -109,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             endGame();
     }
 
-    var isCoordinateCloser = (next, actual, pacmans) => ((next - pacmans) > (actual - pacmans));
-
     var endGame = () => {
         squares[redBlinkyIndex].classList.remove('pac-man');
 
@@ -128,32 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var checkIfGameIsOver = () => squares[redBlinkyIndex].classList.contains('pac-man');
 
-    var createMoveBlinkyTimer = () => {
+    var createMoveBlinkyTimer = (runningAway) => {
         blinkyTimer = setInterval(() => {
-            const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
-            const [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
+            let direction = 
+                runningAway ? getDirectionAccordingToDistanceOfPacman() : getRandomDirection(redBlinkyIndex);
 
-            let alreadyMoved = false;
-
-            directions.every((dir) => {
-                if (!checkIfObstacleExists(redBlinkyIndex, dir, 'exit-door') &&
-                    !checkIfObstacleExists(redBlinkyIndex, dir, 'wall')) {
-                    
-                    const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + dir);
-
-                    if (isCoordinateCloser(newBlinkyX, blinkyX, pacmanX) || isCoordinateCloser(newBlinkyY, blinkyY, pacmanY)) {
-                        moveBlinky(dir);
-
-                        alreadyMoved = true;
-
-                        return false;
-                    }
-                }
-            });
-
-            if (!alreadyMoved) {
-                moveBlinky(getRandomDirection(redBlinkyIndex));
-            }
+            moveBlinky(direction);
         }, 200);
     }
 
@@ -174,7 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let direction = moveFunction();
 
             pacmanTimer = setInterval(() => {
-                if (!checkIfObstacleExists(pacmanIndex, direction, 'wall')) {
+                if (!checkIfObstacleExists(pacmanIndex, direction, 'wall') &&
+                    !checkIfObstacleExists(pacmanIndex, direction, 'exit-door')) {
                     wakaSound.play();
 
                     let className = 'pac-man';
@@ -246,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const squares = [];
-    const availablePositions = [];
+    const map = [];
 
     let pacmanIndex = 489;
     let redBlinkyIndex = 377;
