@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         createBoard();
 
         squares[pacmanIndex].classList.add('pac-man');
-        squares[redBlinkyIndex].classList.add('red-blinky');
+        squares[blinkyIndex].classList.add('blinky');
     
         startSound.play();
     
@@ -65,33 +65,202 @@ document.addEventListener('DOMContentLoaded', () => {
         return direction;
     };
 
-    var getDistanceBetweenTwoCoords = (direction, pacmanCoords, blinkyCoords) => {
-        switch (direction) {
-            case -1: 
-                return Math.sqrt(Math.pow((blinkyCoords.x - (pacmanCoords.x - 4 * width)), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
-            case 1: 
-                return Math.sqrt(Math.pow((blinkyCoords.x - (pacmanCoords.x + 4 * width)), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
-            case 28:
-                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - (pacmanCoords.y + 4 * width), 2));
-            case -28:
-                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - (pacmanCoords.y - 4 * width), 2));
-            default:
-                return Math.sqrt(Math.pow((blinkyCoords.x - pacmanCoords.x), 2) + Math.pow(blinkyCoords.y - pacmanCoords.y, 2));
+    function shuffle(ind, array) {
+        let arr = []
+        let index = ind % 4
+        for (let i = 0; i < 4; i++) {
+          arr.push(array[(index + i) % 4])
+        }
+        return arr
+      }
+
+    function getAdjacences(ind, queue, point) {
+        if (typeof point !== 'undefined') {
+          let adj = shuffle(ind, [{
+            x: point.x,
+            y: point.y - 1,
+            checked: false
+          }, {
+            x: point.x,
+            y: point.y + 1,
+            checked: false
+          }, {
+            x: point.x - 1,
+            y: point.y,
+            checked: false
+          }, {
+            x: point.x + 1,
+            y: point.y,
+            checked: false
+          }])
+          return adj.filter((value) =>
+            ((value.x >= 1 && value.x < width && value.y < width && value.y >= 1 && !isContained(map, value) && !isContained(queue, value))))
+        } else {
+          return []
+        }
+      }
+
+    // var directionLEFT = directions[0];
+    // var directionRIGHT = directions[1];
+    // var directionDOWN = directions[2];
+    // var directionUP = directions[3];
+
+    var routeSquare = function(i){
+        var self = this;
+
+        self.index = i;
+
+        let [selfX, selfY] = getCoordinates(i);
+
+        self.coordinates = {x : selfX, y: selfY};
+
+        self.CheckedLeft = false;
+
+        self.CheckedRight = false;
+
+        self.CheckedDown = false;
+
+        self.CheckedUp = false;
+
+        self.CanGoLeft = !checkIfObstacleExists(i, directions[0], 'exit-door') && 
+        !checkIfObstacleExists(i, directions[0], 'wall');
+
+        self.CanGoRight = !checkIfObstacleExists(i, directions[1], 'exit-door') && 
+        !checkIfObstacleExists(i, directions[1], 'wall');
+
+        self.CanGoDown = !checkIfObstacleExists(i, directions[2], 'exit-door') && 
+        !checkIfObstacleExists(i, directions[2], 'wall');
+
+        self.CanGoUp = !checkIfObstacleExists(i, directions[3], 'exit-door') && 
+        !checkIfObstacleExists(i, directions[3], 'wall');
+
+        self.Bifurcation = [self.CanGoLeft,self.CanGoRight,self.CanGoDown,self.CanGoUp].filter((v) => {return v;}).length > 1;
+    };
+
+    var tracesAdded = [];
+
+    var GetRoute = function(index, sqrs, cameFromDirection, stepsTaken, results){
+        let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
+    
+        let pacmanCoords = { x: pacmanX, y: pacmanY };
+
+        let [currentX, currentY] = getCoordinates(index);
+
+        let currentCoords = { x: currentX, y: currentY };
+
+        addClass(index, 'pinky');
+        tracesAdded.push(index);
+
+        // se chegou no pacman, rota concluida
+        if(currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) return { foundPacman: true, stepsTakenQty: stepsTaken.qty };
+
+        let currentSqr = sqrs.find((s) => { return s.coordinates.x == currentCoords.x && s.coordinates.y == currentCoords.y; });
+
+        if(!currentSqr){
+            currentSqr = new routeSquare(index);
+            sqrs.push(currentSqr);
+        }
+
+        let Bifurcation = [currentSqr.CanGoLeft && cameFromDirection != -1,currentSqr.CanGoRight && cameFromDirection != 1,currentSqr.CanGoDown && cameFromDirection != 28,currentSqr.CanGoUp && cameFromDirection != -28].filter((v) => {return v;}).length > 1;
+
+        if(currentSqr.CanGoLeft && cameFromDirection != -1 && !currentSqr.CheckedLeft){
+            currentSqr.CheckedLeft = true;
+            stepsTaken.qty++;
+
+            let resultLeft = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
+
+            results.push(resultLeft);
+
+            if(!Bifurcation)
+                return resultLeft;
+        }
+
+        if(currentSqr.CanGoRight && cameFromDirection != 1 && !currentSqr.CheckedRight){
+            currentSqr.CheckedRight = true;
+            stepsTaken.qty++;
+
+            let resultRight = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
+
+            results.push(resultRight);
+
+            if(!Bifurcation)
+                return resultRight;
+        }
+
+        if(currentSqr.CanGoDown && cameFromDirection != 28 && !currentSqr.CheckedDown){
+            currentSqr.CheckedDown = true;
+            stepsTaken.qty++;
+
+            let resultDown = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
+
+            results.push(resultDown);
+
+            if(!Bifurcation)
+                return resultDown;
+        }
+
+        if(currentSqr.CanGoUp && cameFromDirection != -28 && !currentSqr.CheckedUp){
+            currentSqr.CheckedUp = true;
+            stepsTaken.qty++;
+            
+            let resultUp = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
+
+            results.push(resultUp);
+
+            if(!Bifurcation)
+                return resultUp;
+        }
+
+        return { foundPacman: false, stepsTakenQty: stepsTaken.qty };
+    };
+
+    var getDistanceBetweenTwoCoords = (direction) => {
+        let steps = [];
+        let stepsQty = { qty: 0 };
+        let results = [];
+
+        GetRoute(blinkyIndex + direction, steps, (-1 * direction), stepsQty, results);
+
+        let lowerResult = results.filter((dir) => dir.foundPacman)
+        .sort((a,b) => (a.stepsTakenQty > b.stepsTakenQty) ? 1 : ((b.stepsTakenQty > a.stepsTakenQty) ? -1 : 0));
+
+        if(lowerResult.length > 0){
+            tracesAdded.forEach(element => {
+                removeClass(element, 'pinky');
+            });
+            debugger;
+            return lowerResult[0].stepsTakenQty;
+        }
+        else {
+            tracesAdded.forEach(element => {
+                removeClass(element, 'pinky');
+            });
+            return 9999;
         }
     }
 
     var getDirectionAccordingToDistanceOfPacman = () => {
         let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
-        let [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
+        let [blinkyX, blinkyY] = getCoordinates(blinkyIndex);
     
         let pacmanCoords = { x: pacmanX, y: pacmanY };
         let blinkyCoords = { x: blinkyX, y: blinkyY };
 
-        let getDistance = (i) => {
-            return (!checkIfObstacleExists(redBlinkyIndex, directions[i], 'exit-door') && 
-                !checkIfObstacleExists(redBlinkyIndex, directions[i], 'wall'))
-                ? getDistanceBetweenTwoCoords(directions[i], pacmanCoords, blinkyCoords) 
+        let getDistance = (direction) => {
+            let canGo = !checkIfObstacleExists(blinkyIndex, directions[direction], 'exit-door') && 
+                !checkIfObstacleExists(blinkyIndex, directions[direction], 'wall');
+
+            let distance = canGo
+                ? getDistanceBetweenTwoCoords(directions[direction])
                 : Infinity;
+
+            let obj = {
+                distance: distance,
+                direction: directions[direction],
+                available: canGo
+            };
+
+            return obj;
         }
 
         let left = getDistance(0);
@@ -99,18 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let down = getDistance(2);
         let up = getDistance(3);
         
-        let minDistance = Math.min(Math.min(left, right), Math.min(up, down));
+        let minDistance = [left, right, down, up]
+            .filter((dir) => dir.available)
+            .sort((a,b) => (a.distance > b.distance) ? 1 : ((b.distance > a.distance) ? -1 : 0));
 
-        switch (minDistance) {
-            case left:
-                return directions[0];    
-            case right:
-                return directions[1];
-            case down:
-                return directions[2];
-            case up:
-                return directions[3];
-        }
+        debugger;
+
+        return minDistance[0].direction;
     }
     
     var checkIfObstacleExists = (index, direction, obstacle) => squares[index + direction].classList.contains(obstacle);
@@ -120,9 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     var removeClass = (index, className) => squares[index].classList.remove(className);
 
     var moveBlinky = (direction) => {
-        let className = 'red-blinky';
+        let className = 'blinky';
 
-        if (blinkyMoveQuantity < 3 || redBlinkyIndex === 321 || redBlinkyIndex === 322) {
+        if (blinkyMoveQuantity < 3 || blinkyIndex === 321 || blinkyIndex === 322) {
             direction = directions[3];
 
             blinkyMoveQuantity++;
@@ -133,38 +297,40 @@ document.addEventListener('DOMContentLoaded', () => {
             squares[322].classList.add('exit-door');
 
             // In case Blinky goes to the edges.
-            if (redBlinkyIndex == 364) {
-                removeClass(redBlinkyIndex, className);
+            if (blinkyIndex == 364) {
+                removeClass(blinkyIndex, className);
 
-                redBlinkyIndex = 391;
+                blinkyIndex = 391;
+
                 direction = -1;
             }
-            else if (redBlinkyIndex == 391) {
-                removeClass(redBlinkyIndex, className);
+            else if (blinkyIndex == 391) {
+                removeClass(blinkyIndex, className);
 
-                redBlinkyIndex = 364;
+                blinkyIndex = 364;
+
                 direction = 1;
             }
             // Avoids Blinky lock itself on "come and go" movement.
             else if (lastDirection && lastDirection == (-1 * direction) &&
-                !checkIfObstacleExists(redBlinkyIndex, lastDirection, 'exit-door') &&
-                !checkIfObstacleExists(redBlinkyIndex, lastDirection, 'wall'))
+                !checkIfObstacleExists(blinkyIndex, lastDirection, 'exit-door') &&
+                !checkIfObstacleExists(blinkyIndex, lastDirection, 'wall'))
             direction = lastDirection;
         }
 
-        removeClass(redBlinkyIndex, className);
+        removeClass(blinkyIndex, className);
 
         lastDirection = direction;
-        redBlinkyIndex += direction;
+        blinkyIndex += direction;
 
-        addClass(redBlinkyIndex, className);
+        addClass(blinkyIndex, className);
 
         if (checkIfGameIsOver())
             endGame();
     }
 
     var endGame = () => {
-        squares[redBlinkyIndex].classList.remove('pac-man');
+        squares[blinkyIndex].classList.remove('pac-man');
 
         document.removeEventListener('keydown', handleArrows);
 
@@ -178,12 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(blinkyTimer);    
     }
 
-    var checkIfGameIsOver = () => squares[redBlinkyIndex].classList.contains('pac-man');
+    var checkIfGameIsOver = () => squares[blinkyIndex].classList.contains('pac-man');
 
-    var createMoveBlinkyTimer = (runningAway) => {
+    var createMoveBlinkyTimer = () => {
         blinkyTimer = setInterval(() => {
-            let direction = 
-                runningAway ? getDirectionAccordingToDistanceOfPacman() : getRandomDirection(redBlinkyIndex);
+            let direction = getDirectionAccordingToDistanceOfPacman();
 
             moveBlinky(direction);
         }, 200);
@@ -226,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     wakaSound.pause();
                 }
-            }, 180);
+            }, 120);
         }
     }
 
@@ -282,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const map = [];
 
     let pacmanIndex = 489;
-    let redBlinkyIndex = 377;
+    let blinkyIndex = 377;
 
     let pacmanTimer = NaN;
     let blinkyTimer = NaN;
