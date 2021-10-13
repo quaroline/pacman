@@ -139,8 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         self.Bifurcation = [self.CanGoLeft,self.CanGoRight,self.CanGoDown,self.CanGoUp].filter((v) => {return v;}).length > 1;
     };
 
-    var tracesAdded = [];
-
     var GetRoute = function(index, sqrs, cameFromDirection, stepsTaken, results){
         let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
     
@@ -152,15 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         stepsTaken.qty++;
 
-        addClass(index, 'pinky');
-        tracesAdded.push(index);
-
         let result = {foundPacman: false, stepsTakenQty: stepsTaken.qty};
 
         // se chegou no pacman, rota concluida
         if(currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) {
             result = { foundPacman: true, stepsTakenQty: stepsTaken.qty };
-            results.push(result);
             return result;
         }
 
@@ -168,93 +162,121 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(!currentSqr){
             currentSqr = new routeSquare(index);
+            currentSqr.CurrentStep = stepsTaken.qty;
             sqrs.push(currentSqr);
         } 
 
         let Bifurcation = [currentSqr.CanGoLeft && cameFromDirection != -1,currentSqr.CanGoRight && cameFromDirection != 1,currentSqr.CanGoDown && cameFromDirection != 28,currentSqr.CanGoUp && cameFromDirection != -28].filter((v) => {return v;}).length > 1;
 
-        if (Bifurcation) {
-            currentSqr.CurrentStep = stepsTaken.qty;
-        }
-
-        if(currentSqr.CanGoLeft && cameFromDirection != -1 && !currentSqr.CheckedLeft){
-            currentSqr.CheckedLeft = true;
-            
-            if (Bifurcation) {
+        var goLeft = {
+            f: function(){
+                currentSqr.CheckedLeft = true;
+                
                 stepsTaken.qty = currentSqr.CurrentStep;
-            }
-
-            result = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
-
-            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
-                results.push(result);
-            else {
-                stepsTaken.qty--;
-                results.stepsTakenQty--;
-            }
-
-            if(!Bifurcation)
+    
+                result = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
+    
+                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                    results.push(result);
+                else {
+                    stepsTaken.qty--;
+                    results.stepsTakenQty--;
+                }
+    
                 return result;
-        } 
+            },
+            valid: currentSqr.CanGoLeft && cameFromDirection != -1 && !currentSqr.CheckedLeft
+        };
 
-        if(currentSqr.CanGoRight && cameFromDirection != 1 && !currentSqr.CheckedRight){
-            currentSqr.CheckedRight = true;
-            
-            if (Bifurcation) {
+        var goRight ={
+            f: function(){
+                currentSqr.CheckedRight = true;
+                
                 stepsTaken.qty = currentSqr.CurrentStep;
-            }
-
-            result = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
-
-            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
-                results.push(result);
-            else {
-                stepsTaken.qty--;
-                results.stepsTakenQty--;
-            }
-
-            if(!Bifurcation)
+    
+                result = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
+    
+                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                    results.push(result);
+                else {
+                    stepsTaken.qty--;
+                    results.stepsTakenQty--;
+                }
+    
                 return result;   
+            },
+            valid: currentSqr.CanGoRight && cameFromDirection != 1 && !currentSqr.CheckedRight
+        };
+
+        var goDown ={
+            f: function(){
+                currentSqr.CheckedDown = true;
+                
+                stepsTaken.qty = currentSqr.CurrentStep;
+    
+                result = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
+    
+                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                    results.push(result);
+                else {
+                    stepsTaken.qty--;
+                    results.stepsTakenQty--;
+                }
+                
+                return result;
+            },
+            valid: currentSqr.CanGoDown && cameFromDirection != 28 && !currentSqr.CheckedDown
+        };
+
+        var goUp = {
+            f: function(){
+                currentSqr.CheckedUp = true;
+                
+                stepsTaken.qty = currentSqr.CurrentStep;
+                
+                result = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
+    
+                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                    results.push(result);
+                else {
+                    stepsTaken.qty--;
+                    results.stepsTakenQty--;
+                }
+    
+                return result;
+            },
+            valid: currentSqr.CanGoUp && cameFromDirection != -28 && !currentSqr.CheckedUp
+        };
+
+        var checkFunctions = [];
+
+        if(currentCoords.y < pacmanCoords.y){
+            checkFunctions.push(goUp);
+            checkFunctions.push(goDown);
+        }
+        
+        if(currentCoords.x < pacmanCoords.x){
+            checkFunctions.push(goRight);
+            checkFunctions.push(goLeft);
         }
 
-        if(currentSqr.CanGoDown && cameFromDirection != 28 && !currentSqr.CheckedDown){
-            currentSqr.CheckedDown = true;
-            
-            if (Bifurcation) {
-                stepsTaken.qty = currentSqr.CurrentStep;
-            }
-
-            result = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
-
-            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
-                results.push(result);
-            else {
-                stepsTaken.qty--;
-                results.stepsTakenQty--;
-            }
-
-            if(!Bifurcation)
-                return result;
+        if(currentCoords.y > pacmanCoords.y){
+            checkFunctions.push(goDown);
+            checkFunctions.push(goUp);
+        }
+        
+        if(currentCoords.x > pacmanCoords.x){
+            checkFunctions.push(goLeft);
+            checkFunctions.push(goRight);
         }
 
-        if(currentSqr.CanGoUp && cameFromDirection != -28 && !currentSqr.CheckedUp){
-            currentSqr.CheckedUp = true;
-            
-            if (Bifurcation) {
-                stepsTaken.qty = currentSqr.CurrentStep;
-            }
-            
-            result = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
+        for(var i = 0; i < checkFunctions.length; i++){
+            if(checkFunctions[i].valid){
+                result = checkFunctions[i].f();
 
-            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
-                results.push(result);
-            else {
-                stepsTaken.qty--;
-                results.stepsTakenQty--;
+                if(!Bifurcation)
+                    break;
             }
-
-            if(!Bifurcation)
-                return result;
         }
 
         return result;
@@ -271,16 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .sort((a,b) => (a.stepsTakenQty > b.stepsTakenQty) ? 1 : ((b.stepsTakenQty > a.stepsTakenQty) ? -1 : 0));
 
         if(lowerResult.length > 0){
-            tracesAdded.forEach(element => {
-                removeClass(element, 'pinky');
-            });
-            debugger;
             return lowerResult[0].stepsTakenQty;
         }
         else {
-            tracesAdded.forEach(element => {
-                removeClass(element, 'pinky');
-            });
             return 9999;
         }
     }

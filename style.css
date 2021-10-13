@@ -133,8 +133,14 @@ body {
     border-radius: 0.625rem;
 }
 
-.red-blinky {
+.blinky {
     border-top-left-radius: 0.625rem;
     border-top-right-radius: 0.625rem;
     background-color: red;
+}
+
+.pinky {
+    border-top-left-radius: 0.625rem;
+    border-top-right-radius: 0.625rem;
+    background-color: #FFB8FF;
 }
