@@ -322,8 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter((dir) => dir.available)
             .sort((a,b) => (a.distance > b.distance) ? 1 : ((b.distance > a.distance) ? -1 : 0));
 
-        debugger;
-
         return minDistance[0].direction;
     }
     
@@ -333,13 +331,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var removeClass = (index, className) => squares[index].classList.remove(className);
 
-    var moveBlinky = (direction) => {
-        let className = 'blinky';
+    var moveBlinky = (direction, className) => {
+        let index = className == 'pinky' ? pinkyIndex : blinkyIndex;
+        let moveQty = className == 'pinky' ? pinkyMoveQuantity : blinkyMoveQuantity;
 
-        if (blinkyMoveQuantity < 3 || blinkyIndex === 321 || blinkyIndex === 322) {
+        if (moveQty < 3 || index === 321 || index === 322) {
             direction = directions[3];
 
-            blinkyMoveQuantity++;
+            if (className == 'pinky')
+                pinkyMoveQuantity++;
+            else 
+                blinkyMoveQuantity++;
         } 
         else {
             // Avoids Blinky enter the initial square again.
@@ -347,33 +349,38 @@ document.addEventListener('DOMContentLoaded', () => {
             squares[322].classList.add('exit-door');
 
             // In case Blinky goes to the edges.
-            if (blinkyIndex == 364) {
-                removeClass(blinkyIndex, className);
+            if (index == 364) {
+                removeClass(index, className);
 
-                blinkyIndex = 391;
+                index = 391;
 
                 direction = -1;
             }
-            else if (blinkyIndex == 391) {
-                removeClass(blinkyIndex, className);
+            else if (index == 391) {
+                removeClass(index, className);
 
-                blinkyIndex = 364;
+                index = 364;
 
                 direction = 1;
             }
             // Avoids Blinky lock itself on "come and go" movement.
             else if (lastDirection && lastDirection == (-1 * direction) &&
-                !checkIfObstacleExists(blinkyIndex, lastDirection, 'exit-door') &&
-                !checkIfObstacleExists(blinkyIndex, lastDirection, 'wall'))
+                !checkIfObstacleExists(index, lastDirection, 'exit-door') &&
+                !checkIfObstacleExists(index, lastDirection, 'wall'))
             direction = lastDirection;
         }
 
-        removeClass(blinkyIndex, className);
+        removeClass(index, className);
 
         lastDirection = direction;
-        blinkyIndex += direction;
+        index += direction;
 
-        addClass(blinkyIndex, className);
+        if (className == 'pinky')
+                pinkyIndex = index;
+            else 
+                blinkyIndex = index;
+
+        addClass(index, className);
 
         if (checkIfGameIsOver())
             endGame();
@@ -392,15 +399,22 @@ document.addEventListener('DOMContentLoaded', () => {
         deathSound.play();
 
         clearInterval(blinkyTimer);    
+        clearInterval(pinkyTimer);  
     }
 
     var checkIfGameIsOver = () => squares[blinkyIndex].classList.contains('pac-man');
 
     var createMoveBlinkyTimer = () => {
+        pinkyTimer = setInterval(() => {
+            let direction = getRandomDirection(pinkyIndex);
+
+            moveBlinky(direction, 'pinky');
+        }, 200);
+
         blinkyTimer = setInterval(() => {
             let direction = getDirectionAccordingToDistanceOfPacman();
 
-            moveBlinky(direction);
+            moveBlinky(direction, 'blinky');
         }, 200);
     }
 
@@ -448,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var lastDirection = NaN;
 
     var blinkyMoveQuantity = 0;
+    var pinkyMoveQuantity = 0;
 
     const wakaSound = new Audio('assets/waka.mp3');
     const startSound = new Audio('assets/start.mp3');
@@ -498,9 +513,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pacmanIndex = 489;
     let blinkyIndex = 377;
+    let pinkyIndex = 378;
 
     let pacmanTimer = NaN;
     let blinkyTimer = NaN;
+    let pinkyTimer = NaN;
 
     let btnStart = document.getElementById("humanAgentStart");
 
