@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             movePacman('ArrowLeft');
     
             createMoveBlinkyTimer();
-        }, 1000);
+        }, 4000);
     
         document.addEventListener('keydown', handleArrows);
 
@@ -99,11 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return []
         }
       }
-
-    // var directionLEFT = directions[0];
-    // var directionRIGHT = directions[1];
-    // var directionDOWN = directions[2];
-    // var directionUP = directions[3];
 
     var routeSquare = function(i){
         var self = this;
@@ -301,9 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     var getDirectionAccordingToDistanceOfPacman = () => {
-        let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
-        let [blinkyX, blinkyY] = getCoordinates(blinkyIndex);
-
         let getDistance = (direction) => {
             let canGo = !checkIfObstacleExists(blinkyIndex, directions[direction], 'exit-door') && 
                 !checkIfObstacleExists(blinkyIndex, directions[direction], 'wall');
