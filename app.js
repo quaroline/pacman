@@ -122,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         self.CheckedUp = false;
 
+        self.CurrentStep = 0;
+
         self.CanGoLeft = !checkIfObstacleExists(i, directions[0], 'exit-door') && 
         !checkIfObstacleExists(i, directions[0], 'wall');
 
@@ -148,70 +150,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let currentCoords = { x: currentX, y: currentY };
 
+        stepsTaken.qty++;
+
         addClass(index, 'pinky');
         tracesAdded.push(index);
 
+        let result = {foundPacman: false, stepsTakenQty: stepsTaken.qty};
+
         // se chegou no pacman, rota concluida
-        if(currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) return { foundPacman: true, stepsTakenQty: stepsTaken.qty };
+        if(currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) {
+            result = { foundPacman: true, stepsTakenQty: stepsTaken.qty };
+            results.push(result);
+            return result;
+        }
 
         let currentSqr = sqrs.find((s) => { return s.coordinates.x == currentCoords.x && s.coordinates.y == currentCoords.y; });
 
         if(!currentSqr){
             currentSqr = new routeSquare(index);
             sqrs.push(currentSqr);
-        }
+        } 
 
         let Bifurcation = [currentSqr.CanGoLeft && cameFromDirection != -1,currentSqr.CanGoRight && cameFromDirection != 1,currentSqr.CanGoDown && cameFromDirection != 28,currentSqr.CanGoUp && cameFromDirection != -28].filter((v) => {return v;}).length > 1;
 
+        if (Bifurcation) {
+            currentSqr.CurrentStep = stepsTaken.qty;
+        }
+
         if(currentSqr.CanGoLeft && cameFromDirection != -1 && !currentSqr.CheckedLeft){
             currentSqr.CheckedLeft = true;
-            stepsTaken.qty++;
+            
+            if (Bifurcation) {
+                stepsTaken.qty = currentSqr.CurrentStep;
+            }
 
-            let resultLeft = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
+            result = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
 
-            results.push(resultLeft);
+            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                results.push(result);
+            else {
+                stepsTaken.qty--;
+                results.stepsTakenQty--;
+            }
 
             if(!Bifurcation)
-                return resultLeft;
-        }
+                return result;
+        } 
 
         if(currentSqr.CanGoRight && cameFromDirection != 1 && !currentSqr.CheckedRight){
             currentSqr.CheckedRight = true;
-            stepsTaken.qty++;
+            
+            if (Bifurcation) {
+                stepsTaken.qty = currentSqr.CurrentStep;
+            }
 
-            let resultRight = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
+            result = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
 
-            results.push(resultRight);
+            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                results.push(result);
+            else {
+                stepsTaken.qty--;
+                results.stepsTakenQty--;
+            }
 
             if(!Bifurcation)
-                return resultRight;
+                return result;   
         }
 
         if(currentSqr.CanGoDown && cameFromDirection != 28 && !currentSqr.CheckedDown){
             currentSqr.CheckedDown = true;
-            stepsTaken.qty++;
+            
+            if (Bifurcation) {
+                stepsTaken.qty = currentSqr.CurrentStep;
+            }
 
-            let resultDown = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
+            result = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
 
-            results.push(resultDown);
+            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                results.push(result);
+            else {
+                stepsTaken.qty--;
+                results.stepsTakenQty--;
+            }
 
             if(!Bifurcation)
-                return resultDown;
+                return result;
         }
 
         if(currentSqr.CanGoUp && cameFromDirection != -28 && !currentSqr.CheckedUp){
             currentSqr.CheckedUp = true;
-            stepsTaken.qty++;
             
-            let resultUp = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
+            if (Bifurcation) {
+                stepsTaken.qty = currentSqr.CurrentStep;
+            }
+            
+            result = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
 
-            results.push(resultUp);
+            if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                results.push(result);
+            else {
+                stepsTaken.qty--;
+                results.stepsTakenQty--;
+            }
 
             if(!Bifurcation)
-                return resultUp;
+                return result;
         }
 
-        return { foundPacman: false, stepsTakenQty: stepsTaken.qty };
+        return result;
     };
 
     var getDistanceBetweenTwoCoords = (direction) => {
@@ -242,9 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var getDirectionAccordingToDistanceOfPacman = () => {
         let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
         let [blinkyX, blinkyY] = getCoordinates(blinkyIndex);
-    
-        let pacmanCoords = { x: pacmanX, y: pacmanY };
-        let blinkyCoords = { x: blinkyX, y: blinkyY };
 
         let getDistance = (direction) => {
             let canGo = !checkIfObstacleExists(blinkyIndex, directions[direction], 'exit-door') && 
