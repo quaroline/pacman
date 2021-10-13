@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return direction;
     };
 
-    var routeSquare = function(i){
+    var routeSquare = function(i) {
         var self = this;
 
         self.index = i;
@@ -96,10 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         self.CanGoUp = !checkIfObstacleExists(i, directions[3], 'exit-door') && 
         !checkIfObstacleExists(i, directions[3], 'wall');
 
-        self.Bifurcation = [self.CanGoLeft,self.CanGoRight,self.CanGoDown,self.CanGoUp].filter((v) => {return v;}).length > 1;
+        self.bifurcation = [self.CanGoLeft,self.CanGoRight,self.CanGoDown,self.CanGoUp].filter((v) => {return v;}).length > 1;
     };
 
-    var GetRoute = function(index, sqrs, cameFromDirection, stepsTaken, results){
+    var getRoute = function(index, sqrs, cameFromDirection, stepsTaken, results) {
         let [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
     
         let pacmanCoords = { x: pacmanX, y: pacmanY };
@@ -112,31 +112,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let result = {foundPacman: false, stepsTakenQty: stepsTaken.qty};
 
-        // se chegou no pacman, rota concluida
-        if(currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) {
+        // If route found Pacman, route's finished.
+        if (currentCoords.x == pacmanCoords.x && currentCoords.y == pacmanCoords.y) {
             result = { foundPacman: true, stepsTakenQty: stepsTaken.qty };
             return result;
         }
 
         let currentSqr = sqrs.find((s) => { return s.coordinates.x == currentCoords.x && s.coordinates.y == currentCoords.y; });
 
-        if(!currentSqr){
+        if (!currentSqr) {
             currentSqr = new routeSquare(index);
             currentSqr.CurrentStep = stepsTaken.qty;
             sqrs.push(currentSqr);
         } 
 
-        let Bifurcation = [currentSqr.CanGoLeft && cameFromDirection != -1,currentSqr.CanGoRight && cameFromDirection != 1,currentSqr.CanGoDown && cameFromDirection != 28,currentSqr.CanGoUp && cameFromDirection != -28].filter((v) => {return v;}).length > 1;
+        let bifurcation = [currentSqr.CanGoLeft && cameFromDirection != -1,currentSqr.CanGoRight && cameFromDirection != 1,currentSqr.CanGoDown && cameFromDirection != 28,currentSqr.CanGoUp && cameFromDirection != -28].filter((v) => {return v;}).length > 1;
 
         var goLeft = {
-            f: function(){
+            f: function() {
                 currentSqr.CheckedLeft = true;
                 
                 stepsTaken.qty = currentSqr.CurrentStep;
     
-                result = GetRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
+                result = getRoute(index + directions[0], sqrs, (-1 * directions[0]), stepsTaken, results);
     
-                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                if (result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
                     results.push(result);
                 else {
                     stepsTaken.qty--;
@@ -149,14 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         var goRight ={
-            f: function(){
+            f: function() {
                 currentSqr.CheckedRight = true;
                 
                 stepsTaken.qty = currentSqr.CurrentStep;
     
-                result = GetRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
+                result = getRoute(index + directions[1], sqrs, (-1 * directions[1]), stepsTaken, results);
     
-                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                if (result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
                     results.push(result);
                 else {
                     stepsTaken.qty--;
@@ -169,14 +169,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         var goDown ={
-            f: function(){
+            f: function() {
                 currentSqr.CheckedDown = true;
                 
                 stepsTaken.qty = currentSqr.CurrentStep;
     
-                result = GetRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
+                result = getRoute(index + directions[2], sqrs, (-1 * directions[2]), stepsTaken, results);
     
-                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                if (result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
                     results.push(result);
                 else {
                     stepsTaken.qty--;
@@ -189,14 +189,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         var goUp = {
-            f: function(){
+            f: function() {
                 currentSqr.CheckedUp = true;
                 
                 stepsTaken.qty = currentSqr.CurrentStep;
                 
-                result = GetRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
+                result = getRoute(index + directions[3], sqrs, (-1 * directions[3]), stepsTaken, results);
     
-                if(result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
+                if (result.foundPacman && !results.find((r) => r.stepsTakenQty == result.stepsTakenQty))
                     results.push(result);
                 else {
                     stepsTaken.qty--;
@@ -210,31 +210,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         var checkFunctions = [];
 
-        if(currentCoords.y < pacmanCoords.y){
+        if (currentCoords.y < pacmanCoords.y) {
             checkFunctions.push(goUp);
             checkFunctions.push(goDown);
         }
         
-        if(currentCoords.x < pacmanCoords.x){
+        if (currentCoords.x < pacmanCoords.x) {
             checkFunctions.push(goRight);
             checkFunctions.push(goLeft);
         }
 
-        if(currentCoords.y > pacmanCoords.y){
+        if (currentCoords.y > pacmanCoords.y) {
             checkFunctions.push(goDown);
             checkFunctions.push(goUp);
         }
         
-        if(currentCoords.x > pacmanCoords.x){
+        if (currentCoords.x > pacmanCoords.x) {
             checkFunctions.push(goLeft);
             checkFunctions.push(goRight);
         }
 
-        for(var i = 0; i < checkFunctions.length; i++){
-            if(checkFunctions[i].valid){
+        for(var i = 0; i < checkFunctions.length; i++) {
+            if (checkFunctions[i].valid) {
                 result = checkFunctions[i].f();
 
-                if(!Bifurcation)
+                if (!bifurcation)
                     break;
             }
         }
@@ -247,17 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let stepsQty = { qty: 0 };
         let results = [];
 
-        GetRoute(blinkyIndex + direction, steps, (-1 * direction), stepsQty, results);
+        getRoute(blinkyIndex + direction, steps, (-1 * direction), stepsQty, results);
 
-        let lowerResult = results.filter((dir) => dir.foundPacman)
-        .sort((a,b) => (a.stepsTakenQty > b.stepsTakenQty) ? 1 : ((b.stepsTakenQty > a.stepsTakenQty) ? -1 : 0));
+        let lowerResult = results
+            .filter((dir) => dir.foundPacman)
+            .sort((a,b) => (a.stepsTakenQty > b.stepsTakenQty) ? 1 : ((b.stepsTakenQty > a.stepsTakenQty) ? -1 : 0));
 
-        if(lowerResult.length > 0){
-            return lowerResult[0].stepsTakenQty;
-        }
-        else {
-            return 9999;
-        }
+        return lowerResult.length > 0 ? lowerResult[0].stepsTakenQty : 9999;
     }
 
     var getDirectionAccordingToDistanceOfPacman = () => {
