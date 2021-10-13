@@ -11,12 +11,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
             if (layout[i] === 1)
                 squares[i].classList.add('wall');
+            else {
+                let [x, y] = getCoordinates(i);
+
+                availablePositions.push({
+                    index: i,
+                    x: x,
+                    y: y
+                });
+            }
         }
     }
 
     var handleArrows = (event) => movePacman(event.key);
 
     var startGame = () => {
+        document.removeEventListener('keydown', handleEnter);
+        
         document.querySelector('.menu').remove();
 
         grid.classList.remove('hidden');
@@ -57,13 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     var moveBlinky = (direction) => {
         let className = 'red-blinky';
 
-        if (blinkyMoveQuantity < 3) {
+        if (blinkyMoveQuantity < 3 || redBlinkyIndex === 321 || redBlinkyIndex === 322) {
             direction = directions[3];
 
             blinkyMoveQuantity++;
         } 
-        else if (redBlinkyIndex === 321) direction = -1;
-        else if (redBlinkyIndex === 322) direction = 1;
         else {
             // Avoids Blinky enter the initial square again.
             squares[321].classList.add('exit-door');
@@ -74,11 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 removeClass(redBlinkyIndex, className);
 
                 redBlinkyIndex = 391;
+                direction = -1;
             }
             else if (redBlinkyIndex == 391) {
                 removeClass(redBlinkyIndex, className);
 
                 redBlinkyIndex = 364;
+                direction = 1;
             }
             // Avoids Blinky lock itself on "come and go" movement.
             else if (lastDirection && lastDirection == (-1 * direction) &&
@@ -119,27 +130,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var createMoveBlinkyTimer = () => {
         blinkyTimer = setInterval(() => {
-            let direction = getRandomDirection(redBlinkyIndex);
-
             const [pacmanX, pacmanY] = getCoordinates(pacmanIndex);
             const [blinkyX, blinkyY] = getCoordinates(redBlinkyIndex);
 
             let alreadyMoved = false;
 
             directions.every((dir) => {
-                const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + dir);
+                if (!checkIfObstacleExists(redBlinkyIndex, dir, 'exit-door') &&
+                    !checkIfObstacleExists(redBlinkyIndex, dir, 'wall')) {
+                    
+                    const [newBlinkyX, newBlinkyY] = getCoordinates(redBlinkyIndex + dir);
 
-                if (isCoordinateCloser(newBlinkyX, blinkyX, pacmanX) || isCoordinateCloser(newBlinkyY, blinkyY, pacmanY)) {
-                    moveBlinky(dir);
+                    if (isCoordinateCloser(newBlinkyX, blinkyX, pacmanX) || isCoordinateCloser(newBlinkyY, blinkyY, pacmanY)) {
+                        moveBlinky(dir);
 
-                    alreadyMoved = true;
+                        alreadyMoved = true;
 
-                    return false;
+                        return false;
+                    }
                 }
             });
 
             if (!alreadyMoved) {
-                moveBlinky(direction);
+                moveBlinky(getRandomDirection(redBlinkyIndex));
             }
         }, 200);
     }
@@ -179,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearInterval(pacmanTimer);
 
                     wakaSound.pause();
-                }                
+                }
             }, 180);
         }
     }
@@ -205,24 +218,24 @@ document.addEventListener('DOMContentLoaded', () => {
         1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
         1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,
-        1,3,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,3,1,
+        1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,
         1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,
         1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,
         1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,
-        1,1,1,1,1,1,0,1,1,4,4,4,4,4,4,4,4,4,4,1,1,0,1,1,1,1,1,1,
-        1,1,1,1,1,1,0,1,1,4,1,1,1,2,2,1,1,1,4,1,1,0,1,1,1,1,1,1,
-        1,1,1,1,1,1,0,1,1,4,1,2,2,2,2,2,2,1,4,1,1,0,1,1,1,1,1,1,
-        4,4,4,4,4,4,0,0,0,4,1,2,2,2,2,2,2,1,4,0,0,0,4,4,4,4,4,4,
-        1,1,1,1,1,1,0,1,1,4,1,2,2,2,2,2,2,1,4,1,1,0,1,1,1,1,1,1,
-        1,1,1,1,1,1,0,1,1,4,1,1,1,1,1,1,1,1,4,1,1,0,1,1,1,1,1,1,
-        1,1,1,1,1,1,0,1,1,4,1,1,1,1,1,1,1,1,4,1,1,0,1,1,1,1,1,1,
-        1,0,0,0,0,0,0,0,0,4,4,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,1,
+        1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,
+        1,1,1,1,1,1,0,1,1,0,1,1,1,0,0,1,1,1,0,1,1,0,1,1,1,1,1,1,
+        1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,
+        1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1,
+        1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,
+        1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,
+        1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,
         1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,
-        1,3,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,3,1,
+        1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,
         1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1,
         1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1,
         1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,
@@ -233,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const squares = [];
+    const availablePositions = [];
 
     let pacmanIndex = 489;
     let redBlinkyIndex = 377;
@@ -245,11 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStart.onclick = startGame;
 
     let handleEnter = (event) => {
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter') 
             startGame();
-
-            document.removeEventListener('keydown', handleEnter);
-        }
     }
 
     document.addEventListener('keydown', handleEnter);
