@@ -83,9 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
     var isCoordinateCloser = (next, actual, pacmans) => ((next - pacmans) > (actual - pacmans));
 
     var endGame = (blinkyTimer) => {
+        squares[redBlinkyIndex].classList.remove('pac-man');
+        
         document.removeEventListener('keydown', handleArrows);
-
-        squares[redBlinkyIndex].classList.remove('pac-man')
 
         clearInterval(pacmanTimer);
 
